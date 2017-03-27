@@ -33,8 +33,8 @@ char odoo_password[33] = "admin";
 char odoo_database[24];
 
 //MQTT parametros.
-const char* mqtt_server = "m21.cloudmqtt.com";
-const int mqtt_port = 16837;
+const char* mqtt_server = "server.cloudmqtt.com";
+const int mqtt_port = cloudmqtt_port;
 
 //flag for saving data
 bool shouldSaveConfig = false;
@@ -211,7 +211,7 @@ void conectMqtt() {
     Serial.print("ConectandoQTT ...");    
     
     //Parametros são nodeMCUClient, usuárioMQTT, senhaMQTT
-    if (client.connect("Comunitea","comunitea","komklave")) {
+    if (client.connect("MqttClient","MqttUser","MqttPass")) {
       Serial.println("Conectado");
       //Inscrevendo-se no tópico retorno.
       client.subscribe("retorno");
