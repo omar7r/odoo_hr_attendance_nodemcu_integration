@@ -20,12 +20,12 @@
 
 #include <SPI.h>
 #include "MFRC522.h"
-#define RST_PIN 0 // RST-PIN for RC522 - RFID - SPI - Modul GPIO0 - D3 
+#define RST_PIN 0 // RST-PIN for RC522 - RFID - SPI - Modul GPIO0 - D3
 #define SS_PIN  2  // SDA-PIN for RC522 - RFID - SPI - Modul GPIO2 - D4
 
 
 //define your default values here, if there are different values in config.json, they are overwritten.
-//length should be max size + 1 
+//length should be max size + 1
 char odoo_host[90];
 char odoo_port[6] = "8069";
 char odoo_user[33] = "admin";
@@ -62,7 +62,7 @@ void setup() {
   pinMode(RED_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
   SPI.begin();           // Init SPI bus
-  mfrc522.PCD_Init();    // Init MFRC522 
+  mfrc522.PCD_Init();    // Init MFRC522
 
   //clean FS, for testing
   //SPIFFS.format();
@@ -125,7 +125,7 @@ void setup() {
 
   //set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
-  
+
   //add all your parameters here
   wifiManager.addParameter(&custom_odoo_host);
   wifiManager.addParameter(&custom_odoo_port);
@@ -139,7 +139,7 @@ void setup() {
   //set minimu quality of signal so it ignores AP's under that quality
   //defaults to 8%
   wifiManager.setMinimumSignalQuality();
-  
+
   //sets timeout until configuration portal gets turned off
   //useful to make it all retry or go to sleep
   //in seconds
@@ -195,46 +195,43 @@ void setup() {
   Serial.println(WiFi.subnetMask());
   Serial.println(WiFi.SSID());
 
-  //Definindo server mqtt do Client
+  //Set mqtt server data
   client.setServer(mqtt_server, mqtt_port);
-  
-  //Definindo método callback que irá receber os callbacks do client criado.
+
   client.setCallback(callback);
 
   Serial.println(F("Ready!"));
-  Serial.println(F("======================================================")); 
+  Serial.println(F("======================================================"));
   Serial.println(F("Scan for Card and print UID:"));
 }
 
 void conectMqtt() {
-  while (!client.connected()) {    
-    Serial.print("ConectandoQTT ...");    
-    
-    //Parametros são nodeMCUClient, usuárioMQTT, senhaMQTT
+  while (!client.connected()) {
+    Serial.print("ConnectingMQTT ...");
+
+    //Parameters nodeMCUClient, userMQTT, passwordMQTT
     if (client.connect("MqttClient","MqttUser","MqttPass")) {
-      Serial.println("Conectado");
-      //Inscrevendo-se no tópico retorno.
+      Serial.println("Connected");
+      //Subscriing to topic retorno.
       client.subscribe("retorno");
     } else {
-      Serial.print("Falha");      
-      Serial.print(client.state());      
-      Serial.println(" Tentando novamente em 5 segundos");      
+      Serial.print("Error");
+      Serial.print(client.state());
+      Serial.println("Retry in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
     }
   }
 }
 
-//Método que foi definido para receber os retornos dos tópicos que demos subscribe,
-// neste caso apenas o tópico 'retorno'
-//Parametros: NomedoTópico, mensagem , tamanho da mensagem
+//Parameters: topic_name, msg , msg length
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
-  Serial.print("Messagembida [");
+  Serial.print("Welcome [");
   Serial.print(topic);
   Serial.print("]: ");
   String mensagem = "";
-  //Conversão da mensagem recebidade de byte pra String
+  //Convert msg from byte to string
   for (int i = 0; i < length; i++) {
     mensagem += (char)payload[i];
   }
@@ -272,7 +269,7 @@ void loop() {
     delay(3000);
     ESP.reset();
     delay(5000);}
-  
+
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
     delay(50);
@@ -289,7 +286,7 @@ void loop() {
     dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
     Serial.println();
   }
-  
+
  }
 
  // Helper routine to dump a byte array as hex values to Serial
@@ -299,16 +296,16 @@ void dump_byte_array(byte *buffer, byte bufferSize) {
   for (byte i = 0; i < bufferSize; i++) {
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX);
-    //Conversão de byte pra Hexadecimal
-    sprintf(s,"%s%x",buffer[i] < 0x10 ? "0" : "",mfrc522.uid.uidByte[i]);    
-    //Concatenando para o array de char que será enviado
+    //Convert from byte to Hexadecimal
+    sprintf(s,"%s%x",buffer[i] < 0x10 ? "0" : "",mfrc522.uid.uidByte[i]);
+    //Concatenate msg
     strcat( &rfidstr[i] , s);
   }
   char buf[512];
   snprintf(buf, sizeof buf, "%s###%s###%s###%s###%s###%s", odoo_host, odoo_port, odoo_user, odoo_password, odoo_database, rfidstr);
   currentCard = rfidstr;
-  client.publish("acesso", buf); 
-  Serial.println("Verificando...");
+  client.publish("acesso", buf);
+  Serial.println("Verifing...");
 }
 
 
